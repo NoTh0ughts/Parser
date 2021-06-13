@@ -1,5 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
+from pymongo import MongoClient
 
 URL = 'http://www.volgograd.ru/news/'
 HEADERS = {
@@ -7,20 +8,10 @@ HEADERS = {
                   'Chrome/91.0.4472.77 Safari/537.36',
     'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,'
               'application/signed-exchange;v=b3;q=0.9'}
-HEADERS_WITH_HOST = {
-    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
-                  'Chrome/91.0.4472.77 Safari/537.36',
-    'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,'
-              'application/signed-exchange;v=b3;q=0.9',
-    'host' : 'www.volgograd.ru'}
 
 
 def get_html(url, params=None):
     req = requests.get(url, headers=HEADERS, params=params)
-    return req
-
-def get_html_child(url) :
-    req = requests.get(url, headers=HEADERS_WITH_HOST)
     return req
 
 
@@ -42,11 +33,13 @@ def get_content(html):
             'date': new.find('div', class_='date').text,
             'text': get_news_text(ref)
         })
-    print(news_items)
+
+    #print(news_items)
+    return news_items
 
 
 def get_news_text(url):
-    html = get_html_child(url)
+    html = get_html(url)
 
     if html.status_code == 200 or html.status_code == 304:
         soup = BeautifulSoup(html.text, 'html.parser')
@@ -68,7 +61,19 @@ def get_news_text(url):
 def parse():
     html = get_html(URL)
     if html.status_code == 200:
-        get_content(html.text)
+        content = get_content(html.text)
+        client = MongoClient('mongodb://localhost:27017/?ssl=false')
+        db = client.NewsData
+        counter = 0
+        news_added = 0
+        for item in content:
+            if db.News.count_documents({'ref': item['ref']}, limit=1) > 0:
+                continue
+            result = db.News.insert_one(item)
+            print('Inserted {0} as {1}'.format(counter, result.inserted_id))
+            counter += 1
+            news_added += 1
+        print('Added {0} items in database'.format(news_added))
     else:
         print('ERROR: cant find url')
 
