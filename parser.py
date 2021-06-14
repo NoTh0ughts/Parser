@@ -1,6 +1,41 @@
+import signal
+import threading
+import time
 import requests
+
+from datetime import timedelta
 from bs4 import BeautifulSoup
 from pymongo import MongoClient
+
+WAIT_TIME_SECONDS = 20
+
+
+class Job(threading.Thread):
+    def __init__(self, interval, execute, *args, **kwargs):
+        threading.Thread.__init__(self)
+        self.daemon = False
+        self.stopped = threading.Event()
+        self.interval = interval
+        self.execute = execute
+        self.args = args
+        self.kwargs = kwargs
+
+    def stop(self):
+        self.stopped.set()
+        self.join()
+
+    def run(self):
+        while not self.stopped.wait(self.interval.total_seconds()):
+            self.execute(*self.args, **self.kwargs)
+
+
+class ProgramKilled(Exception):
+    pass
+
+
+def signal_handler(signum, frame):
+    raise ProgramKilled
+
 
 URL = 'http://www.volgograd.ru/news/'
 HEADERS = {
@@ -34,7 +69,7 @@ def get_content(html):
             'text': get_news_text(ref)
         })
 
-    #print(news_items)
+    # print(news_items)
     return news_items
 
 
@@ -78,4 +113,18 @@ def parse():
         print('ERROR: cant find url')
 
 
-parse()
+if __name__ == "__main__":
+    periodicity = int(input('Input update periodicity in seconds : '))
+
+    signal.signal(signal.SIGTERM, signal_handler)
+    signal.signal(signal.SIGINT, signal_handler)
+    job = Job(interval=timedelta(seconds=periodicity), execute=parse)
+    job.start()
+    while True:
+        try:
+            time.sleep(1)
+        except ProgramKilled:
+            print("Program killed")
+            "Program killed"
+            job.stop()
+            break
