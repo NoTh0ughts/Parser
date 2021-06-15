@@ -1,3 +1,4 @@
+import os.path
 import signal
 import threading
 import time
@@ -6,8 +7,6 @@ import requests
 from datetime import timedelta
 from bs4 import BeautifulSoup
 from pymongo import MongoClient
-
-WAIT_TIME_SECONDS = 20
 
 
 class Job(threading.Thread):
@@ -43,6 +42,7 @@ HEADERS = {
                   'Chrome/91.0.4472.77 Safari/537.36',
     'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,'
               'application/signed-exchange;v=b3;q=0.9'}
+is_showed = False
 
 
 def get_html(url, params=None):
@@ -79,6 +79,9 @@ def get_news_text(url):
     if html.status_code == 200 or html.status_code == 304:
         soup = BeautifulSoup(html.text, 'html.parser')
         text = soup.find('div', class_='news-detail')
+        if text is None:
+            print("cant find news for id {0}".format(url))
+            return get_news_text(url)
         text = text.findAll('p')
 
         result = ''
@@ -95,22 +98,52 @@ def get_news_text(url):
 
 def parse():
     html = get_html(URL)
+
     if html.status_code == 200:
         content = get_content(html.text)
         client = MongoClient('mongodb://localhost:27017/?ssl=false')
         db = client.NewsData
-        counter = 0
+        inserted = 0
         news_added = 0
         for item in content:
             if db.News.count_documents({'ref': item['ref']}, limit=1) > 0:
                 continue
             result = db.News.insert_one(item)
-            print('Inserted {0} as {1}'.format(counter, result.inserted_id))
-            counter += 1
+            print('Inserted {0} as {1}'.format(inserted, result.inserted_id))
+            inserted += 1
             news_added += 1
         print('Added {0} items in database'.format(news_added))
+
+        global is_showed
+        if not is_showed:
+            cursor = list(db.News.find({}).limit(20))
+            create_html(cursor)
+            is_showed = True
+
     else:
         print('ERROR: cant find url')
+
+
+def create_html(content):
+    filename = "data.html"
+    text = '''
+    <html>
+        <body>
+    '''
+    for item in content:
+        text += '<p>' + '<br/>'.join('\t'.join((key, str(item[key]))) for key in item) + '<p/>'
+    text += '''
+            </body>
+    </html>
+    '''
+
+    file = open(filename, "w", encoding='utf-8')
+    file.write(text)
+    file.close()
+
+    import webbrowser
+    url = "file://" + os.path.realpath(filename)
+    webbrowser.open(url, new=2)
 
 
 if __name__ == "__main__":
@@ -125,6 +158,5 @@ if __name__ == "__main__":
             time.sleep(1)
         except ProgramKilled:
             print("Program killed")
-            "Program killed"
             job.stop()
             break
