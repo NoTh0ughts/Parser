@@ -30,6 +30,7 @@ namespace Newser
         private void InitializeComponent()
         {
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.refreshButton = new System.Windows.Forms.Button();
             this.newsDataGroup = new System.Windows.Forms.GroupBox();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
             this.textText = new System.Windows.Forms.TextBox();
@@ -44,7 +45,6 @@ namespace Newser
             this.titleLabel = new System.Windows.Forms.Label();
             this.dateText = new System.Windows.Forms.TextBox();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
-            this.refreshButton = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.newsDataGroup.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
@@ -65,6 +65,17 @@ namespace Newser
             this.groupBox1.Size = new System.Drawing.Size(1044, 630);
             this.groupBox1.TabIndex = 0;
             this.groupBox1.TabStop = false;
+            // 
+            // refreshButton
+            // 
+            this.refreshButton.Dock = System.Windows.Forms.DockStyle.Right;
+            this.refreshButton.Location = new System.Drawing.Point(925, 29);
+            this.refreshButton.Name = "refreshButton";
+            this.refreshButton.Size = new System.Drawing.Size(116, 266);
+            this.refreshButton.TabIndex = 13;
+            this.refreshButton.Text = "Refresh";
+            this.refreshButton.UseVisualStyleBackColor = true;
+            this.refreshButton.Click += new System.EventHandler(this.refreshButton_Click);
             // 
             // newsDataGroup
             // 
@@ -269,17 +280,6 @@ namespace Newser
             this.dataGridView1.Size = new System.Drawing.Size(902, 272);
             this.dataGridView1.TabIndex = 0;
             this.dataGridView1.CellMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridView1_CellMouseClick);
-            // 
-            // refreshButton
-            // 
-            this.refreshButton.Dock = System.Windows.Forms.DockStyle.Right;
-            this.refreshButton.Location = new System.Drawing.Point(925, 29);
-            this.refreshButton.Name = "refreshButton";
-            this.refreshButton.Size = new System.Drawing.Size(116, 266);
-            this.refreshButton.TabIndex = 13;
-            this.refreshButton.Text = "Refresh";
-            this.refreshButton.UseVisualStyleBackColor = true;
-            this.refreshButton.Click += new System.EventHandler(this.refreshButton_Click);
             // 
             // Form1
             // 
