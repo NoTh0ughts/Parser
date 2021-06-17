@@ -69,7 +69,7 @@ def get_content(html):
             'text': get_news_text(ref)
         })
 
-    # print(news_items)
+    print(news_items)
     return news_items
 
 
@@ -104,15 +104,13 @@ def parse():
         client = MongoClient('mongodb://localhost:27017/?ssl=false')
         db = client.NewsData
         inserted = 0
-        news_added = 0
         for item in content:
             if db.News.count_documents({'ref': item['ref']}, limit=1) > 0:
                 continue
             result = db.News.insert_one(item)
             print('Inserted {0} as {1}'.format(inserted, result.inserted_id))
             inserted += 1
-            news_added += 1
-        print('Added {0} items in database'.format(news_added))
+        print('Added {0} items in database'.format(inserted))
 
         global is_showed
         if not is_showed:
