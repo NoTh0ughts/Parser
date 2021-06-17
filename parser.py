@@ -69,7 +69,7 @@ def get_content(html):
             'text': get_news_text(ref)
         })
 
-    print(news_items)
+    #print(news_items)
     return news_items
 
 
@@ -115,7 +115,8 @@ def parse():
         global is_showed
         if not is_showed:
             cursor = list(db.News.find({}).limit(20))
-            create_html(cursor)
+            # create_html(cursor)
+            os.startfile(r"C:\Users\Hello\PycharmProjects\Parser\Newser\Newser\bin\Debug\Newser.exe")
             is_showed = True
 
     else:
