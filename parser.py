@@ -69,7 +69,7 @@ def get_content(html):
             'text': get_news_text(ref)
         })
 
-    #print(news_items)
+    # print(news_items)
     return news_items
 
 
@@ -111,14 +111,6 @@ def parse():
             print('Inserted {0} as {1}'.format(inserted, result.inserted_id))
             inserted += 1
         print('Added {0} items in database'.format(inserted))
-
-        global is_showed
-        if not is_showed:
-            cursor = list(db.News.find({}).limit(20))
-            # create_html(cursor)
-            os.startfile(r"C:\Users\Hello\PycharmProjects\Parser\Newser\Newser\bin\Debug\Newser.exe")
-            is_showed = True
-
     else:
         print('ERROR: cant find url')
 
@@ -147,9 +139,22 @@ def create_html(content):
 
 if __name__ == "__main__":
     periodicity = int(input('Input update periodicity in seconds : '))
+    display = int(input('Input type of representation: 1 - web page, 2 - application : '))
 
     signal.signal(signal.SIGTERM, signal_handler)
     signal.signal(signal.SIGINT, signal_handler)
+
+    parse()
+    if display == 1:
+        client = MongoClient('mongodb://localhost:27017/?ssl=false')
+        db = client.NewsData
+        cursor = list(db.News.find({}).limit(20))
+        create_html(cursor)
+    else:
+        if display == 2:
+            os.startfile(r"C:\Users\Hello\PycharmProjects\Parser\Newser\Newser\bin\Debug\Newser.exe")
+    is_showed = True
+
     job = Job(interval=timedelta(seconds=periodicity), execute=parse)
     job.start()
     while True:
